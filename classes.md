@@ -124,6 +124,19 @@ Porta de saída do domínio — implementada pela infrastructure.
 </blockquote>
 </details>
 
+<details id="UserNotFoundException">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/domain/user/UserNotFoundException.java">UserNotFoundException.java</a></strong></summary>
+<blockquote>
+
+**extends** [`NotFoundException`](#NotFoundException)
+
+**metodos**
+- `UserNotFoundException(Long id)`
+- `UserNotFoundException(String email)`
+
+</blockquote>
+</details>
+
 </blockquote>
 </details>
 
@@ -246,7 +259,50 @@ Porta de saída — implementada por [`JwtTokenGenerator`](#JwtTokenGenerator).
 <summary><strong>application/user/</strong></summary>
 <blockquote>
 
-_vazio — Fase 5_
+<details id="UserService">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/application/user/UserService.java">UserService.java</a></strong></summary>
+<blockquote>
+
+**metodos**
+- `create(CreateUserRequest): UserResponse`
+- `createAdmin(CreateUserRequest): UserResponse`
+- `findByEmail(String): UserResponse`
+- `listAll(): List<UserResponse>`
+- `updateName(Long, UpdateNameRequest): UserResponse`
+- `updateEmail(Long, UpdateEmailRequest): UserResponse`
+- `delete(Long): void`
+
+</blockquote>
+</details>
+
+<details id="UserServiceImpl">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/application/user/UserServiceImpl.java">UserServiceImpl.java</a> [@Service]</strong></summary>
+<blockquote>
+
+**implements** [`UserService`](#UserService)
+
+**dependencias**
+- [`UserRepository`](#UserRepository)
+- `PasswordEncoder`
+
+**regras de negócio**
+- email único em create e updateEmail → `BusinessException("Email already in use")`
+- usuário deve existir em update/delete → `UserNotFoundException`
+
+</blockquote>
+</details>
+
+<details id="dir-application-user-dto">
+<summary><strong>application/user/dto/</strong></summary>
+<blockquote>
+
+- [CreateUserRequest.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/application/user/dto/CreateUserRequest.java) — record: `name`, `@Email email`, `password`
+- [UpdateNameRequest.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/application/user/dto/UpdateNameRequest.java) — record: `name`
+- [UpdateEmailRequest.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/application/user/dto/UpdateEmailRequest.java) — record: `@Email email`
+- [UserResponse.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/application/user/dto/UserResponse.java) — record: `id`, `name`, `email`, `role` + factory `from(User)`
+
+</blockquote>
+</details>
 
 </blockquote>
 </details>
@@ -487,7 +543,25 @@ Adaptador: traduz entre [`User`](#User) (domínio) e [`UserJpaEntity`](#UserJpaE
 <summary><strong>presentation/user/</strong></summary>
 <blockquote>
 
-_vazio — Fase 5_
+<details id="UserController">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/presentation/user/UserController.java">UserController.java</a> [@RestController @RequestMapping("/api/v1/users")]</strong></summary>
+<blockquote>
+
+**dependencias** [`UserService`](#UserService)
+
+**endpoints**
+| Método | Path | Auth | Status |
+|---|---|---|---|
+| POST | `/api/v1/users` | público | 201 |
+| POST | `/api/v1/users/admin` | ADMIN | 201 |
+| GET | `/api/v1/users` | ADMIN | 200 |
+| GET | `/api/v1/users/{email}` | público | 200 |
+| PATCH | `/api/v1/users/{id}/name` | autenticado | 200 |
+| PATCH | `/api/v1/users/{id}/email` | autenticado | 200 |
+| DELETE | `/api/v1/users/{id}` | autenticado | 204 |
+
+</blockquote>
+</details>
 
 </blockquote>
 </details>
@@ -541,3 +615,5 @@ _vazio — Fase 5_
 | [UserRepositoryImplTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/infrastructure/persistence/user/UserRepositoryImplTest.java) | @DataJpaTest + H2 | CRUD e queries do repositório |
 | [GlobalExceptionHandlerTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/presentation/exception/GlobalExceptionHandlerTest.java) | @WebMvcTest | mapeamento de exceções → status HTTP |
 | [AuthControllerTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/presentation/auth/AuthControllerTest.java) | @WebMvcTest | endpoints HTTP do controller de auth |
+| [UserServiceImplTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/application/user/UserServiceImplTest.java) | Mockito | regras de negócio do UserService (12 casos) |
+| [UserControllerTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/presentation/user/UserControllerTest.java) | @WebMvcTest | endpoints REST do UserController (12 casos) |
