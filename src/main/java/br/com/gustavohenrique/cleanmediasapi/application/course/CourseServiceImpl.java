@@ -72,6 +72,11 @@ public class CourseServiceImpl implements CourseService {
         courseRepository.deleteByIdAndUserId(id, userId);
     }
 
+    @Override
+    public CourseResponse findByIdAndUserId(Long userId, Long id) {
+        return CourseResponse.from(requireExists(id, userId));
+    }
+
     // --- helpers privados ---
 
     private Course requireExists(Long id, Long userId) {

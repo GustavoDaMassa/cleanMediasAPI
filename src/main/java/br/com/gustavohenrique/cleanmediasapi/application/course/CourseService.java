@@ -17,4 +17,7 @@ public interface CourseService {
     CourseResponse updateCutOffGrade(Long userId, Long id, UpdateCutOffGradeRequest request);
 
     void delete(Long userId, Long id);
+
+    // Usado pelo ProjectionController para buscar o curso antes de criar uma projeção
+    CourseResponse findByIdAndUserId(Long userId, Long id);
 }
