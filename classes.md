@@ -100,7 +100,7 @@ Entidade de domínio pura — sem `@Entity`, sem Spring, sem Lombok.
 - [`Role`](#Role) `role` — final
 
 **metodos**
-- `User(Long id, String name, String email, String password, Role role)` — construtor completo (reconstituição do banco)
+- `User(Long id, String name, String email, String password, Role role)` — reconstituição do banco
 - `User(String name, String email, String password, Role role)` — novo usuário (id null)
 - getters para todos os campos
 
@@ -114,12 +114,12 @@ Entidade de domínio pura — sem `@Entity`, sem Spring, sem Lombok.
 Porta de saída do domínio — implementada pela infrastructure.
 
 **metodos**
-- `save(User user): User`
-- `findById(Long id): Optional<User>`
-- `findByEmail(String email): Optional<User>`
+- `save(User): User`
+- `findById(Long): Optional<User>`
+- `findByEmail(String): Optional<User>`
 - `findAll(): List<User>`
-- `deleteById(Long id): void`
-- `existsByEmail(String email): boolean`
+- `deleteById(Long): void`
+- `existsByEmail(String): boolean`
 
 </blockquote>
 </details>
@@ -144,7 +144,45 @@ Porta de saída do domínio — implementada pela infrastructure.
 <summary><strong>domain/course/</strong></summary>
 <blockquote>
 
-_vazio — Fase 5_
+<details id="Course">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/domain/course/Course.java">Course.java</a></strong></summary>
+<blockquote>
+
+Entidade de domínio pura.
+
+**atributos**
+- `Long id`, `Long userId`, `String name`, `String averageMethod`, `double cutOffGrade` — todos final
+
+**metodos**
+- `Course(Long id, Long userId, String name, String averageMethod, double cutOffGrade)` — reconstituição
+- `Course(Long userId, String name, String averageMethod, double cutOffGrade)` — novo curso (id null)
+- getters para todos os campos
+
+</blockquote>
+</details>
+
+<details id="CourseRepository">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/domain/course/CourseRepository.java">CourseRepository.java</a></strong></summary>
+<blockquote>
+
+**metodos**
+- `save(Course): Course`
+- `findByIdAndUserId(Long, Long): Optional<Course>`
+- `findAllByUserId(Long): List<Course>`
+- `deleteByIdAndUserId(Long, Long): void`
+- `existsByNameAndUserId(String, Long): boolean`
+
+</blockquote>
+</details>
+
+<details id="CourseNotFoundException">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/domain/course/CourseNotFoundException.java">CourseNotFoundException.java</a></strong></summary>
+<blockquote>
+
+**extends** [`NotFoundException`](#NotFoundException)
+
+</blockquote>
+</details>
 
 </blockquote>
 </details>
@@ -153,7 +191,48 @@ _vazio — Fase 5_
 <summary><strong>domain/projection/</strong></summary>
 <blockquote>
 
-_vazio — Fase 5_
+<details id="Projection">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/domain/projection/Projection.java">Projection.java</a></strong></summary>
+<blockquote>
+
+Entidade de domínio pura.
+
+**atributos**
+- `Long id`, `Long courseId`, `String name`, `double finalGrade` — todos final
+
+**metodos**
+- `Projection(Long id, Long courseId, String name, double finalGrade)` — reconstituição
+- `Projection(Long courseId, String name)` — nova projeção (id null, finalGrade=0.0)
+- getters para todos os campos
+
+</blockquote>
+</details>
+
+<details id="ProjectionRepository">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/domain/projection/ProjectionRepository.java">ProjectionRepository.java</a></strong></summary>
+<blockquote>
+
+**metodos**
+- `save(Projection): Projection`
+- `findById(Long): Optional<Projection>`
+- `findByIdAndCourseId(Long, Long): Optional<Projection>`
+- `findAllByCourseId(Long): List<Projection>`
+- `findAllByUserId(Long): List<Projection>`
+- `deleteByIdAndCourseId(Long, Long): void`
+- `deleteAllByCourseId(Long): void`
+- `existsByNameAndCourseId(String, Long): boolean`
+
+</blockquote>
+</details>
+
+<details id="ProjectionNotFoundException">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/domain/projection/ProjectionNotFoundException.java">ProjectionNotFoundException.java</a></strong></summary>
+<blockquote>
+
+**extends** [`NotFoundException`](#NotFoundException)
+
+</blockquote>
+</details>
 
 </blockquote>
 </details>
@@ -162,7 +241,53 @@ _vazio — Fase 5_
 <summary><strong>domain/assessment/</strong></summary>
 <blockquote>
 
-_vazio — Fase 5_
+<details id="Assessment">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/domain/assessment/Assessment.java">Assessment.java</a></strong></summary>
+<blockquote>
+
+Entidade com invariante central: `grade` sem setter público — só acessível via `applyGrade()`.
+
+**atributos**
+- `Long id`, `Long projectionId`, `String identifier`, `double maxValue` — final
+- `double grade`, `double requiredGrade`, `boolean fixed` — mutáveis apenas por métodos específicos
+
+**metodos**
+- `Assessment(Long id, Long projectionId, String identifier, double grade, double maxValue, double requiredGrade, boolean fixed)` — reconstituição
+- `Assessment(Long projectionId, String identifier, double maxValue)` — novo assessment (grade=0, fixed=false)
+- `applyGrade(double grade)` — valida `0 <= grade <= maxValue`, seta `fixed=true`; lança [`BusinessException`](#BusinessException) se inválido
+- `updateRequiredGrade(double requiredGrade)`
+- getters para todos os campos
+
+</blockquote>
+</details>
+
+<details id="AssessmentRepository">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/domain/assessment/AssessmentRepository.java">AssessmentRepository.java</a></strong></summary>
+<blockquote>
+
+**metodos**
+- `save(Assessment): Assessment`
+- `saveAll(List<Assessment>): List<Assessment>`
+- `findByIdAndProjectionId(Long, Long): Optional<Assessment>`
+- `findAllByProjectionId(Long): List<Assessment>`
+- `existsByIdentifierAndProjectionId(String, Long): boolean`
+- `deleteAllByProjectionId(Long): void`
+
+</blockquote>
+</details>
+
+<details id="AssessmentNotFoundException">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/domain/assessment/AssessmentNotFoundException.java">AssessmentNotFoundException.java</a></strong></summary>
+<blockquote>
+
+**extends** [`NotFoundException`](#NotFoundException)
+
+**metodos**
+- `AssessmentNotFoundException(Long id)`
+- `AssessmentNotFoundException(Long id, Long projectionId)`
+
+</blockquote>
+</details>
 
 </blockquote>
 </details>
@@ -171,7 +296,57 @@ _vazio — Fase 5_
 <summary><strong>domain/formula/</strong></summary>
 <blockquote>
 
-_vazio — Fase 5_
+Pipeline de avaliação de fórmulas matemáticas: `FormulaParser` → `ShuntingYard` → `RpnEvaluator`.
+
+<details id="FormulaToken">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/domain/formula/FormulaToken.java">FormulaToken.java</a></strong></summary>
+<blockquote>
+
+**tipo** `record`
+
+**campos** `Type type`, `String value`
+
+**tipos** `NUMBER`, `IDENTIFIER`, `OPERATOR`, `FUNCTION` (`@M[n]`), `LPAREN`, `RPAREN`, `SEP` (`;`)
+
+**metodos** `isNumber()`, `isIdentifier()`, `isOperator()`, `isFunction()`, `isLParen()`, `isRParen()`, `isSep()`
+
+</blockquote>
+</details>
+
+<details id="FormulaParser">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/domain/formula/FormulaParser.java">FormulaParser.java</a></strong></summary>
+<blockquote>
+
+**metodos**
+- `extractIdentifiers(String formula): Map<String, Double>` — extrai identificadores com seus `maxValue` (padrão 10.0); suporta `AV1[8]`
+- `tokenize(String formula): List<FormulaToken>` — transforma a string em lista de tokens via regex multi-grupo
+
+</blockquote>
+</details>
+
+<details id="ShuntingYard">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/domain/formula/ShuntingYard.java">ShuntingYard.java</a></strong></summary>
+<blockquote>
+
+Algoritmo de Dijkstra — converte tokens infixos para RPN.
+
+**metodos**
+- `toRpn(List<FormulaToken>): List<FormulaToken>` — rastreia `argCountStack` para anotar funções como `@M[n]:argCount`
+
+</blockquote>
+</details>
+
+<details id="RpnEvaluator">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/domain/formula/RpnEvaluator.java">RpnEvaluator.java</a></strong></summary>
+<blockquote>
+
+Avaliador de pilha para RPN.
+
+**metodos**
+- `evaluate(List<FormulaToken> rpn, Function<String, Double> resolver): double` — números/identificadores empilhados, operadores consomem 2, `@M[n]:argCount` consome exatamente `argCount` valores, ordena decrescente, soma top-n, divide por n
+
+</blockquote>
+</details>
 
 </blockquote>
 </details>
@@ -201,7 +376,7 @@ Porta de saída — implementada por [`JwtTokenGenerator`](#JwtTokenGenerator).
 <blockquote>
 
 **metodos**
-- `authenticate(AuthRequest request): AuthResponse`
+- `authenticate(AuthRequest): AuthResponse`
 
 </blockquote>
 </details>
@@ -212,13 +387,10 @@ Porta de saída — implementada por [`JwtTokenGenerator`](#JwtTokenGenerator).
 
 **implements** [`AuthService`](#AuthService)
 
-**dependencias**
-- [`UserRepository`](#UserRepository)
-- `PasswordEncoder`
-- [`TokenGenerator`](#TokenGenerator)
+**dependencias** [`UserRepository`](#UserRepository) · `PasswordEncoder` · [`TokenGenerator`](#TokenGenerator)
 
 **metodos**
-- `authenticate(AuthRequest request): AuthResponse` — valida email + senha, lança `BusinessException("Invalid credentials")` se inválido
+- `authenticate(AuthRequest): AuthResponse` — valida email + senha, lança `BusinessException("Invalid credentials")` se inválido
 
 </blockquote>
 </details>
@@ -227,27 +399,8 @@ Porta de saída — implementada por [`JwtTokenGenerator`](#JwtTokenGenerator).
 <summary><strong>application/auth/dto/</strong></summary>
 <blockquote>
 
-<details id="AuthRequest">
-<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/application/auth/dto/AuthRequest.java">AuthRequest.java</a></strong></summary>
-<blockquote>
-
-**tipo** `record`
-
-**campos** `@NotBlank @Email String email`, `@NotBlank String password`
-
-</blockquote>
-</details>
-
-<details id="AuthResponse">
-<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/application/auth/dto/AuthResponse.java">AuthResponse.java</a></strong></summary>
-<blockquote>
-
-**tipo** `record`
-
-**campos** `String token`
-
-</blockquote>
-</details>
+- [AuthRequest.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/application/auth/dto/AuthRequest.java) — record: `@NotBlank @Email email`, `@NotBlank password`
+- [AuthResponse.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/application/auth/dto/AuthResponse.java) — record: `String token`
 
 </blockquote>
 </details>
@@ -281,13 +434,11 @@ Porta de saída — implementada por [`JwtTokenGenerator`](#JwtTokenGenerator).
 
 **implements** [`UserService`](#UserService)
 
-**dependencias**
-- [`UserRepository`](#UserRepository)
-- `PasswordEncoder`
+**dependencias** [`UserRepository`](#UserRepository) · `PasswordEncoder`
 
 **regras de negócio**
-- email único em create e updateEmail → `BusinessException("Email already in use")`
-- usuário deve existir em update/delete → `UserNotFoundException`
+- email único → `BusinessException("Email already in use")`
+- usuário deve existir → [`UserNotFoundException`](#UserNotFoundException)
 
 </blockquote>
 </details>
@@ -299,7 +450,7 @@ Porta de saída — implementada por [`JwtTokenGenerator`](#JwtTokenGenerator).
 - [CreateUserRequest.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/application/user/dto/CreateUserRequest.java) — record: `name`, `@Email email`, `password`
 - [UpdateNameRequest.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/application/user/dto/UpdateNameRequest.java) — record: `name`
 - [UpdateEmailRequest.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/application/user/dto/UpdateEmailRequest.java) — record: `@Email email`
-- [UserResponse.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/application/user/dto/UserResponse.java) — record: `id`, `name`, `email`, `role` + factory `from(User)`
+- [UserResponse.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/application/user/dto/UserResponse.java) — record: `id`, `name`, `email`, `role` + `from(User)`
 
 </blockquote>
 </details>
@@ -311,7 +462,50 @@ Porta de saída — implementada por [`JwtTokenGenerator`](#JwtTokenGenerator).
 <summary><strong>application/course/</strong></summary>
 <blockquote>
 
-_vazio — Fase 5_
+<details id="CourseService">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/application/course/CourseService.java">CourseService.java</a></strong></summary>
+<blockquote>
+
+**metodos**
+- `create(Long userId, CreateCourseRequest): CourseResponse`
+- `listAll(Long userId): List<CourseResponse>`
+- `updateName(Long userId, Long id, UpdateCourseNameRequest): CourseResponse`
+- `updateAverageMethod(Long userId, Long id, UpdateAverageMethodRequest): CourseResponse`
+- `updateCutOffGrade(Long userId, Long id, UpdateCutOffGradeRequest): CourseResponse`
+- `delete(Long userId, Long id): void`
+- `findByIdAndUserId(Long userId, Long id): CourseResponse`
+
+</blockquote>
+</details>
+
+<details id="CourseServiceImpl">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/application/course/CourseServiceImpl.java">CourseServiceImpl.java</a> [@Service]</strong></summary>
+<blockquote>
+
+**implements** [`CourseService`](#CourseService)
+
+**dependencias** [`CourseRepository`](#CourseRepository) · [`ProjectionService`](#ProjectionService)
+
+**regras de negócio**
+- nome único por usuário → `BusinessException("Course name already in use")`
+- ao criar: chama `projectionService.initializeForCourse()`
+- ao atualizar `averageMethod`: deleta e recria todas as projeções do curso
+
+</blockquote>
+</details>
+
+<details id="dir-application-course-dto">
+<summary><strong>application/course/dto/</strong></summary>
+<blockquote>
+
+- [CreateCourseRequest.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/application/course/dto/CreateCourseRequest.java) — record: `name`, `averageMethod`, `cutOffGrade`
+- [UpdateCourseNameRequest.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/application/course/dto/UpdateCourseNameRequest.java) — record: `name`
+- [UpdateAverageMethodRequest.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/application/course/dto/UpdateAverageMethodRequest.java) — record: `averageMethod`
+- [UpdateCutOffGradeRequest.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/application/course/dto/UpdateCutOffGradeRequest.java) — record: `cutOffGrade`
+- [CourseResponse.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/application/course/dto/CourseResponse.java) — record: `id`, `name`, `averageMethod`, `cutOffGrade` + `from(Course)`
+
+</blockquote>
+</details>
 
 </blockquote>
 </details>
@@ -320,7 +514,47 @@ _vazio — Fase 5_
 <summary><strong>application/projection/</strong></summary>
 <blockquote>
 
-_vazio — Fase 5_
+<details id="ProjectionService">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/application/projection/ProjectionService.java">ProjectionService.java</a></strong></summary>
+<blockquote>
+
+**metodos**
+- `initializeForCourse(Course): void` — cria projeção default + assessments para um curso novo
+- `deleteAllByCourse(Long courseId): void`
+- `create(Course, CreateProjectionRequest): ProjectionResponse`
+- `listByCourse(Long courseId): List<ProjectionResponse>`
+- `listAllByUser(Long userId): List<ProjectionResponse>`
+- `updateName(Long courseId, Long id, UpdateProjectionNameRequest): ProjectionResponse`
+- `delete(Long courseId, Long id): void`
+
+</blockquote>
+</details>
+
+<details id="ProjectionServiceImpl">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/application/projection/ProjectionServiceImpl.java">ProjectionServiceImpl.java</a> [@Service]</strong></summary>
+<blockquote>
+
+**implements** [`ProjectionService`](#ProjectionService)
+
+**dependencias** [`ProjectionRepository`](#ProjectionRepository) · [`AssessmentService`](#AssessmentService)
+
+**regras de negócio**
+- nome único por curso → `BusinessException("Projection name already in use")`
+- ao criar: chama `assessmentService.initializeForProjection()`
+
+</blockquote>
+</details>
+
+<details id="dir-application-projection-dto">
+<summary><strong>application/projection/dto/</strong></summary>
+<blockquote>
+
+- [CreateProjectionRequest.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/application/projection/dto/CreateProjectionRequest.java) — record: `name`
+- [UpdateProjectionNameRequest.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/application/projection/dto/UpdateProjectionNameRequest.java) — record: `name`
+- [ProjectionResponse.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/application/projection/dto/ProjectionResponse.java) — record: `id`, `courseId`, `name`, `finalGrade` + `from(Projection)`
+
+</blockquote>
+</details>
 
 </blockquote>
 </details>
@@ -329,7 +563,44 @@ _vazio — Fase 5_
 <summary><strong>application/assessment/</strong></summary>
 <blockquote>
 
-_vazio — Fase 5_
+<details id="AssessmentService">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/application/assessment/AssessmentService.java">AssessmentService.java</a></strong></summary>
+<blockquote>
+
+**metodos**
+- `initializeForProjection(Projection, String averageMethod): void` — parseia fórmula e cria assessments
+- `deleteAllByProjectionId(Long): void`
+- `findAllByProjectionId(Long): List<AssessmentResponse>`
+- `findByIdAndProjectionId(Long id, Long projectionId): AssessmentResponse`
+- `applyGrade(Long projectionId, Long assessmentId, double grade, String averageMethod): AssessmentResponse`
+
+</blockquote>
+</details>
+
+<details id="AssessmentServiceImpl">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/application/assessment/AssessmentServiceImpl.java">AssessmentServiceImpl.java</a> [@Service]</strong></summary>
+<blockquote>
+
+**implements** [`AssessmentService`](#AssessmentService)
+
+**dependencias** [`AssessmentRepository`](#AssessmentRepository) · [`ProjectionRepository`](#ProjectionRepository)
+
+**instâncias internas** [`FormulaParser`](#FormulaParser) · [`ShuntingYard`](#ShuntingYard) · [`RpnEvaluator`](#RpnEvaluator)
+
+**regras de negócio**
+- `applyGrade()`: valida via `Assessment.applyGrade()`, persiste, recalcula `finalGrade` da projeção via pipeline RPN com notas atuais de todos os assessments
+
+</blockquote>
+</details>
+
+<details id="dir-application-assessment-dto">
+<summary><strong>application/assessment/dto/</strong></summary>
+<blockquote>
+
+- [AssessmentResponse.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/application/assessment/dto/AssessmentResponse.java) — record: `id`, `projectionId`, `identifier`, `maxValue`, `grade`, `requiredGrade`, `fixed` + `from(Assessment)`
+
+</blockquote>
+</details>
 
 </blockquote>
 </details>
@@ -372,8 +643,8 @@ _vazio — Fase 5_
 
 **metodos**
 - `generateToken(String subject, String role): String` — gera JWT RS256 com claim `roles`
-- `decoder(): JwtDecoder` — exposto para o `SecurityConfig`
-- `derFromPem(String base64Pem): byte[]` — private, extrai DER do PEM em base64
+- `decoder(): JwtDecoder`
+- `derFromPem(String base64Pem): byte[]` — private; extrai DER do PEM em base64 (strip headers antes de decodificar)
 
 </blockquote>
 </details>
@@ -386,9 +657,6 @@ _vazio — Fase 5_
 
 **dependencias** [`JwtService`](#JwtService)
 
-**metodos**
-- `generate(User user): String`
-
 </blockquote>
 </details>
 
@@ -399,7 +667,7 @@ _vazio — Fase 5_
 **dependencias** [`JwtService`](#JwtService)
 
 **beans**
-- `filterChain(HttpSecurity): SecurityFilterChain` — stateless, JWT RS256, permissões por endpoint
+- `filterChain(HttpSecurity): SecurityFilterChain` — STATELESS, JWT RS256, permissões por endpoint
 - `passwordEncoder(): PasswordEncoder` — BCrypt
 
 </blockquote>
@@ -409,9 +677,7 @@ _vazio — Fase 5_
 <summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/infrastructure/security/MdcFilter.java">MdcFilter.java</a> [@Component]</strong></summary>
 <blockquote>
 
-**extends** `OncePerRequestFilter`
-
-Adiciona `userEmail` ao MDC para rastreabilidade nos logs.
+**extends** `OncePerRequestFilter` — adiciona `userEmail` ao MDC para rastreabilidade nos logs
 
 </blockquote>
 </details>
@@ -423,8 +689,6 @@ Adiciona `userEmail` ao MDC para rastreabilidade nos logs.
 **implements** `UserDetailsService`
 
 **dependencias** [`UserRepository`](#UserRepository)
-
-Ponte entre [`User`](#User) (domínio puro) e `UserDetails` (Spring Security).
 
 **metodos**
 - `loadUserByUsername(String email): UserDetails`
@@ -443,13 +707,8 @@ Ponte entre [`User`](#User) (domínio puro) e `UserDetails` (Spring Security).
 <summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/infrastructure/persistence/user/UserJpaEntity.java">UserJpaEntity.java</a> [@Entity @Table("users")]</strong></summary>
 <blockquote>
 
-**atributos**
-- `Long id` — `@Id @GeneratedValue`
-- `String name`, `String email` (unique), `String password`
-- [`Role`](#Role) `role` — `@Enumerated(STRING)`
-
 **metodos**
-- `fromDomain(User user): UserJpaEntity` — static
+- `fromDomain(User): UserJpaEntity` — static
 - `toDomain(): User`
 
 </blockquote>
@@ -461,9 +720,7 @@ Ponte entre [`User`](#User) (domínio puro) e `UserDetails` (Spring Security).
 
 **extends** `JpaRepository<UserJpaEntity, Long>` — package-private
 
-**metodos**
-- `findByEmail(String email): Optional<UserJpaEntity>`
-- `existsByEmail(String email): boolean`
+**metodos** `findByEmail(String)`, `existsByEmail(String)`
 
 </blockquote>
 </details>
@@ -472,11 +729,115 @@ Ponte entre [`User`](#User) (domínio puro) e `UserDetails` (Spring Security).
 <summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/infrastructure/persistence/user/UserRepositoryImpl.java">UserRepositoryImpl.java</a> [@Repository]</strong></summary>
 <blockquote>
 
-**implements** [`UserRepository`](#UserRepository)
+**implements** [`UserRepository`](#UserRepository) · **dependencias** [`UserJpaRepository`](#UserJpaRepository)
 
-**dependencias** [`UserJpaRepository`](#UserJpaRepository)
+</blockquote>
+</details>
 
-Adaptador: traduz entre [`User`](#User) (domínio) e [`UserJpaEntity`](#UserJpaEntity) (JPA).
+</blockquote>
+</details>
+
+<details id="dir-infra-persistence-course">
+<summary><strong>infrastructure/persistence/course/</strong></summary>
+<blockquote>
+
+<details id="CourseJpaEntity">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/infrastructure/persistence/course/CourseJpaEntity.java">CourseJpaEntity.java</a> [@Entity @Table("courses")]</strong></summary>
+<blockquote>
+
+**metodos** `fromDomain(Course): CourseJpaEntity` (static) · `toDomain(): Course`
+
+</blockquote>
+</details>
+
+<details id="CourseJpaRepository">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/infrastructure/persistence/course/CourseJpaRepository.java">CourseJpaRepository.java</a></strong></summary>
+<blockquote>
+
+**extends** `JpaRepository<CourseJpaEntity, Long>` — package-private
+
+**metodos** `findByIdAndUserId`, `findAllByUserId`, `deleteByIdAndUserId`, `existsByNameAndUserId`
+
+</blockquote>
+</details>
+
+<details id="CourseRepositoryImpl">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/infrastructure/persistence/course/CourseRepositoryImpl.java">CourseRepositoryImpl.java</a> [@Repository]</strong></summary>
+<blockquote>
+
+**implements** [`CourseRepository`](#CourseRepository) · **dependencias** [`CourseJpaRepository`](#CourseJpaRepository)
+
+</blockquote>
+</details>
+
+</blockquote>
+</details>
+
+<details id="dir-infra-persistence-projection">
+<summary><strong>infrastructure/persistence/projection/</strong></summary>
+<blockquote>
+
+<details id="ProjectionJpaEntity">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/infrastructure/persistence/projection/ProjectionJpaEntity.java">ProjectionJpaEntity.java</a> [@Entity @Table("projections")]</strong></summary>
+<blockquote>
+
+**metodos** `fromDomain(Projection): ProjectionJpaEntity` (static) · `toDomain(): Projection`
+
+</blockquote>
+</details>
+
+<details id="ProjectionJpaRepository">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/infrastructure/persistence/projection/ProjectionJpaRepository.java">ProjectionJpaRepository.java</a></strong></summary>
+<blockquote>
+
+**extends** `JpaRepository<ProjectionJpaEntity, Long>` — package-private
+
+**metodos** `findByIdAndCourseId`, `findAllByCourseId`, `findAllByUserId` (JPQL via join com courses), `deleteByIdAndCourseId`, `deleteAllByCourseId`, `existsByNameAndCourseId`
+
+</blockquote>
+</details>
+
+<details id="ProjectionRepositoryImpl">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/infrastructure/persistence/projection/ProjectionRepositoryImpl.java">ProjectionRepositoryImpl.java</a> [@Repository]</strong></summary>
+<blockquote>
+
+**implements** [`ProjectionRepository`](#ProjectionRepository) · **dependencias** [`ProjectionJpaRepository`](#ProjectionJpaRepository)
+
+</blockquote>
+</details>
+
+</blockquote>
+</details>
+
+<details id="dir-infra-persistence-assessment">
+<summary><strong>infrastructure/persistence/assessment/</strong></summary>
+<blockquote>
+
+<details id="AssessmentJpaEntity">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/infrastructure/persistence/assessment/AssessmentJpaEntity.java">AssessmentJpaEntity.java</a> [@Entity @Table("assessments")]</strong></summary>
+<blockquote>
+
+**metodos** `fromDomain(Assessment): AssessmentJpaEntity` (static) · `toDomain(): Assessment`
+
+</blockquote>
+</details>
+
+<details id="AssessmentJpaRepository">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/infrastructure/persistence/assessment/AssessmentJpaRepository.java">AssessmentJpaRepository.java</a></strong></summary>
+<blockquote>
+
+**extends** `JpaRepository<AssessmentJpaEntity, Long>` — package-private
+
+**metodos** `findByIdAndProjectionId`, `findAllByProjectionId`, `existsByIdentifierAndProjectionId`, `deleteAllByProjectionId`
+
+</blockquote>
+</details>
+
+<details id="AssessmentRepositoryImpl">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/infrastructure/persistence/assessment/AssessmentRepositoryImpl.java">AssessmentRepositoryImpl.java</a> [@Repository]</strong></summary>
+<blockquote>
+
+**implements** [`AssessmentRepository`](#AssessmentRepository) · **dependencias** [`AssessmentJpaRepository`](#AssessmentJpaRepository)
 
 </blockquote>
 </details>
@@ -496,9 +857,7 @@ Adaptador: traduz entre [`User`](#User) (domínio) e [`UserJpaEntity`](#UserJpaE
 <summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/presentation/exception/ErrorResponse.java">ErrorResponse.java</a></strong></summary>
 <blockquote>
 
-**tipo** `record`
-
-**campos** `int status`, `String error`, `String message`, `String timestamp`
+**tipo** `record` · **campos** `int status`, `String error`, `String message`, `String timestamp`
 
 </blockquote>
 </details>
@@ -525,7 +884,7 @@ Adaptador: traduz entre [`User`](#User) (domínio) e [`UserJpaEntity`](#UserJpaE
 <blockquote>
 
 <details id="AuthController">
-<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/presentation/auth/AuthController.java">AuthController.java</a> [@RestController @RequestMapping("/authenticate")]</strong></summary>
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/presentation/auth/AuthController.java">AuthController.java</a> [@RestController]</strong></summary>
 <blockquote>
 
 **dependencias** [`AuthService`](#AuthService)
@@ -544,12 +903,11 @@ Adaptador: traduz entre [`User`](#User) (domínio) e [`UserJpaEntity`](#UserJpaE
 <blockquote>
 
 <details id="UserController">
-<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/presentation/user/UserController.java">UserController.java</a> [@RestController @RequestMapping("/api/v1/users")]</strong></summary>
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/presentation/user/UserController.java">UserController.java</a> [@RestController]</strong></summary>
 <blockquote>
 
 **dependencias** [`UserService`](#UserService)
 
-**endpoints**
 | Método | Path | Auth | Status |
 |---|---|---|---|
 | POST | `/api/v1/users` | público | 201 |
@@ -570,7 +928,35 @@ Adaptador: traduz entre [`User`](#User) (domínio) e [`UserJpaEntity`](#UserJpaE
 <summary><strong>presentation/course/</strong></summary>
 <blockquote>
 
-_vazio — Fase 5_
+<details id="CourseController">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/presentation/course/CourseController.java">CourseController.java</a> [@RestController]</strong></summary>
+<blockquote>
+
+**dependencias** [`CourseService`](#CourseService)
+
+| Método | Path | Status |
+|---|---|---|
+| POST | `/api/v1/users/{userId}/courses` | 201 |
+| GET | `/api/v1/users/{userId}/courses` | 200 |
+| PATCH | `/api/v1/users/{userId}/courses/{id}/name` | 200 |
+| PATCH | `/api/v1/users/{userId}/courses/{id}/average-method` | 200 |
+| PATCH | `/api/v1/users/{userId}/courses/{id}/cut-off-grade` | 200 |
+| DELETE | `/api/v1/users/{userId}/courses/{id}` | 204 |
+
+</blockquote>
+</details>
+
+<details id="dir-presentation-course-dto">
+<summary><strong>presentation/course/dto/</strong></summary>
+<blockquote>
+
+- [CreateCourseRequest.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/presentation/course/dto/CreateCourseRequest.java) — request de criação com validações
+- [UpdateCourseNameRequest.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/presentation/course/dto/UpdateCourseNameRequest.java)
+- [UpdateAverageMethodRequest.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/presentation/course/dto/UpdateAverageMethodRequest.java)
+- [UpdateCutOffGradeRequest.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/presentation/course/dto/UpdateCutOffGradeRequest.java)
+
+</blockquote>
+</details>
 
 </blockquote>
 </details>
@@ -579,7 +965,22 @@ _vazio — Fase 5_
 <summary><strong>presentation/projection/</strong></summary>
 <blockquote>
 
-_vazio — Fase 5_
+<details id="ProjectionController">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/presentation/projection/ProjectionController.java">ProjectionController.java</a> [@RestController]</strong></summary>
+<blockquote>
+
+**dependencias** [`ProjectionService`](#ProjectionService) · [`CourseService`](#CourseService)
+
+| Método | Path | Status |
+|---|---|---|
+| POST | `/api/v1/users/{userId}/courses/{courseId}/projections` | 201 |
+| GET | `/api/v1/users/{userId}/courses/{courseId}/projections` | 200 |
+| GET | `/api/v1/users/{userId}/projections` | 200 |
+| PATCH | `/api/v1/users/{userId}/courses/{courseId}/projections/{id}` | 200 |
+| DELETE | `/api/v1/users/{userId}/courses/{courseId}/projections/{id}` | 204 |
+
+</blockquote>
+</details>
 
 </blockquote>
 </details>
@@ -588,7 +989,29 @@ _vazio — Fase 5_
 <summary><strong>presentation/assessment/</strong></summary>
 <blockquote>
 
-_vazio — Fase 5_
+<details id="AssessmentController">
+<summary><strong><a href="src/main/java/br/com/gustavohenrique/cleanmediasapi/presentation/assessment/AssessmentController.java">AssessmentController.java</a> [@RestController]</strong></summary>
+<blockquote>
+
+**dependencias** [`AssessmentService`](#AssessmentService) · [`CourseService`](#CourseService)
+
+| Método | Path | Status |
+|---|---|---|
+| GET | `/api/v1/users/{userId}/courses/{courseId}/projections/{projectionId}/assessments` | 200 |
+| GET | `/api/v1/users/{userId}/courses/{courseId}/projections/{projectionId}/assessments/{id}` | 200 |
+| PATCH | `/api/v1/users/{userId}/courses/{courseId}/projections/{projectionId}/assessments/{id}/grade` | 200 |
+
+</blockquote>
+</details>
+
+<details id="dir-presentation-assessment-dto">
+<summary><strong>presentation/assessment/dto/</strong></summary>
+<blockquote>
+
+- [ApplyGradeRequest.java](src/main/java/br/com/gustavohenrique/cleanmediasapi/presentation/assessment/dto/ApplyGradeRequest.java) — record: `@NotNull Double grade`
+
+</blockquote>
+</details>
 
 </blockquote>
 </details>
@@ -600,8 +1023,8 @@ _vazio — Fase 5_
 
 ## src/main/resources
 
-- [application.properties](src/main/resources/application.properties) — configuração principal
-- [db/migration/](src/main/resources/db/migration/) — scripts Flyway (Fase 6)
+- [application.properties](src/main/resources/application.properties) — configuração principal (datasource, JPA, Flyway, JWT, CORS, Swagger)
+- [db/migration/V1__create_schema.sql](src/main/resources/db/migration/V1__create_schema.sql) — schema completo: `users`, `courses`, `projections`, `assessments` com FK cascades
 
 ---
 
@@ -609,11 +1032,25 @@ _vazio — Fase 5_
 
 | Classe de Teste | Tipo | Cobertura |
 |---|---|---|
+| [CleanMediasApiApplicationTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/CleanMediasApiApplicationTest.java) | @SpringBootTest + H2 | smoke: contexto sobe sem erros |
 | [UserTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/domain/user/UserTest.java) | JUnit puro | construtores e getters de `User` |
+| [AssessmentTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/domain/assessment/AssessmentTest.java) | JUnit puro | invariante `applyGrade()`, limites, negativo |
+| [FormulaParserTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/domain/formula/FormulaParserTest.java) | JUnit puro | extração de identificadores e maxValue, tokenização |
+| [ShuntingYardTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/domain/formula/ShuntingYardTest.java) | JUnit puro | precedência, parênteses, anotação `@M[n]:argCount` |
+| [RpnEvaluatorTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/domain/formula/RpnEvaluatorTest.java) | JUnit puro | média simples, ponderada, top-n, fórmula complexa |
 | [AuthServiceImplTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/application/auth/AuthServiceImplTest.java) | Mockito | fluxo de autenticação (sucesso e falhas) |
-| [JwtServiceTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/infrastructure/security/JwtServiceTest.java) | JUnit puro | geração e decodificação de JWT |
-| [UserRepositoryImplTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/infrastructure/persistence/user/UserRepositoryImplTest.java) | @DataJpaTest + H2 | CRUD e queries do repositório |
+| [UserServiceImplTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/application/user/UserServiceImplTest.java) | Mockito | CRUD de usuários, email único, 12 casos |
+| [CourseServiceImplTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/application/course/CourseServiceImplTest.java) | Mockito | CRUD de cursos, cascata de projeções, 10 casos |
+| [ProjectionServiceImplTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/application/projection/ProjectionServiceImplTest.java) | Mockito | CRUD de projeções, inicialização de assessments, 11 casos |
+| [AssessmentServiceImplTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/application/assessment/AssessmentServiceImplTest.java) | Mockito | initializeForProjection, applyGrade com RPN, 8 casos |
+| [JwtServiceTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/infrastructure/security/JwtServiceTest.java) | JUnit puro | geração e decodificação de JWT RSA |
+| [UserRepositoryImplTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/infrastructure/persistence/user/UserRepositoryImplTest.java) | @DataJpaTest + H2 | CRUD e queries do repositório de usuários |
+| [CourseRepositoryImplTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/infrastructure/persistence/course/CourseRepositoryImplTest.java) | @DataJpaTest + H2 | CRUD e queries do repositório de cursos |
+| [ProjectionRepositoryImplTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/infrastructure/persistence/projection/ProjectionRepositoryImplTest.java) | @DataJpaTest + H2 | CRUD e queries do repositório de projeções |
+| [AssessmentRepositoryImplTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/infrastructure/persistence/assessment/AssessmentRepositoryImplTest.java) | @DataJpaTest + H2 | CRUD e queries do repositório de assessments |
 | [GlobalExceptionHandlerTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/presentation/exception/GlobalExceptionHandlerTest.java) | @WebMvcTest | mapeamento de exceções → status HTTP |
-| [AuthControllerTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/presentation/auth/AuthControllerTest.java) | @WebMvcTest | endpoints HTTP do controller de auth |
-| [UserServiceImplTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/application/user/UserServiceImplTest.java) | Mockito | regras de negócio do UserService (12 casos) |
-| [UserControllerTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/presentation/user/UserControllerTest.java) | @WebMvcTest | endpoints REST do UserController (12 casos) |
+| [AuthControllerTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/presentation/auth/AuthControllerTest.java) | @WebMvcTest | endpoints de autenticação |
+| [UserControllerTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/presentation/user/UserControllerTest.java) | @WebMvcTest | 12 casos do UserController |
+| [CourseControllerTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/presentation/course/CourseControllerTest.java) | @WebMvcTest | 10 casos do CourseController |
+| [ProjectionControllerTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/presentation/projection/ProjectionControllerTest.java) | @WebMvcTest | 9 casos do ProjectionController |
+| [AssessmentControllerTest](src/test/java/br/com/gustavohenrique/cleanmediasapi/presentation/assessment/AssessmentControllerTest.java) | @WebMvcTest | 6 casos do AssessmentController |
