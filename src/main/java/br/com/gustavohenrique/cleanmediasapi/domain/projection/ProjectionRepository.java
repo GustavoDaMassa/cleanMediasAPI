@@ -7,6 +7,8 @@ public interface ProjectionRepository {
 
     Projection save(Projection projection);
 
+    Optional<Projection> findById(Long id);
+
     Optional<Projection> findByIdAndCourseId(Long id, Long courseId);
 
     List<Projection> findAllByCourseId(Long courseId);

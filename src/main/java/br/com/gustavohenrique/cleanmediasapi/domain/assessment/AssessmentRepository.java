@@ -14,4 +14,6 @@ public interface AssessmentRepository {
     List<Assessment> findAllByProjectionId(Long projectionId);
 
     boolean existsByIdentifierAndProjectionId(String identifier, Long projectionId);
+
+    void deleteAllByProjectionId(Long projectionId);
 }
