@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.svg" alt="cleanMediasAPI logo" width="400"/>
+</p>
+
 # cleanMediasAPI
 
 Reimplementação da [MediasAPI](https://github.com/GustavoDaMassa/MediasAPI) com **Clean Architecture** — mesma lógica de negócio, estrutura completamente diferente.
